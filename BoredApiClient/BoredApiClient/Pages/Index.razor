@@ -1,0 +1,170 @@
+﻿@page "/home"
+@page "/"
+
+@using BoredApiClient.Models
+@using BoredApiClient.DataAccess
+@using BoredApiClient.Enums
+@inject ISnackbar SnackBar
+@inject BoredDao BoredDao
+
+<PageTitle>Activities</PageTitle>
+
+<MudContainer>
+    <MudGrid>
+        <MudItem xs="12" sm="5">
+            <MudPaper Class="pa-4">
+                <MudForm @ref="_form" @bind-IsValid="@_success">
+                    <MudGrid>
+                        <MudItem xs="6">
+                            <MudSelect @bind-Value="TypeValue" Label="Activity Category" OpenIcon="@Icons.Material.Filled.LocalActivity" AdornmentColor="Color.Secondary">
+                                @foreach (ActivityType item in Enum.GetValues(typeof(ActivityType)))
+                                {
+                                    <MudSelectItem Value="@item">@item</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudNumericField @bind-Value="ParticipantsValue" Immediate="true" Label="Participants" Variant="Variant.Text" Min="1"/>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudSlider @bind-Value="PriceMinValue" Immediate="true" Label="PriceMinValue" Min="0" Max="1" Step="0.05">
+                                <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Secondary"/> Budget Min
+                            </MudSlider>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudSlider @bind-Value="PriceMaxValue" Immediate="true" Label="PriceMaxValue" Min="0" Max="1" Step="0.05">
+                                <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Secondary"/> Budget Max
+                            </MudSlider>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudSlider @bind-Value="AccessibilityMinValue" Immediate="true" Label="AccessibilityMinValue" Min="0" Max="1" Step="0.05">
+                                <MudIcon Icon="@Icons.Material.Filled.Accessibility" Color="Color.Secondary"/> Accessibility Min
+                            </MudSlider>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudSlider @bind-Value="AccessibilityMaxValue" Immediate="true" Label="AccessibilityMaxValue" Min="0" Max="1" Step="0.05">
+                                <MudIcon Icon="@Icons.Material.Filled.Accessibility" Color="Color.Secondary"/> Accessibility Max
+                            </MudSlider>
+                        </MudItem>
+                    </MudGrid>
+                    <div class="d-flex align-center justify-space-between mt-6">
+                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" DisableElevation="true" OnClick="@(() => ResetForm())" Class="mx-1">Reset Form</MudButton>
+                        <MudButton Variant="Variant.Filled" DisableElevation="true" OnClick="@(() => ClearActivities())" Class="mx-1">Clear Activities</MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_success)" OnClick="@(() => ProcessForm())" Class="mx-1">Get Another Activity</MudButton>
+                    </div>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="7">
+            <MudPaper Class="pa-4 mud-height-full">
+                <MudExpansionPanels>
+                    @foreach (var context in _activities)
+                    {
+                        <MudExpansionPanel Text="@context.Activity">
+                            <MudSimpleTable>
+                                <thead>
+                                <tr>
+                                    <th>Accessibility</th>
+                                    <th>Type</th>
+                                    <th>Participants</th>
+                                    <th>Price</th>
+                                    <th>Link</th>
+                                    <th>Key</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>@context.Accessibility</td>
+                                    <td>@context.Type</td>
+                                    <td>@context.Participants</td>
+                                    <td>@context.Price</td>
+                                    <td>@context.Link</td>
+                                    <td>@context.Key</td>
+                                </tr>
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudExpansionPanel>
+                    }
+                </MudExpansionPanels>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+<MudSnackbarProvider/>
+
+@code {
+    private bool _loading = true;
+    private List<ActivityItem> _activities = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        SetFromInitial();
+        _activities.Add(await BoredDao.GetRandomActivityAsync());
+    }
+
+    private void ClearActivities()
+    {
+        _activities.Clear();
+    }
+
+    private void SetFromInitial()
+    {
+        TypeValue = ActivityType.Any;
+        PriceMinValue = 0;
+        PriceMaxValue = 1;
+        AccessibilityMinValue = 0;
+        AccessibilityMaxValue = 1;
+        ParticipantsValue = 1;
+        ValidateFormInput();
+    }
+
+    private ActivityType TypeValue { get; set; }
+    private double PriceMinValue { get; set; }
+    private double PriceMaxValue { get; set; }
+    private double AccessibilityMinValue { get; set; }
+    private double AccessibilityMaxValue { get; set; }
+    private int ParticipantsValue { get; set; }
+    private bool _success;
+    private bool _formInputValid;
+    private MudForm _form;
+
+    private async Task ResetForm()
+    {
+        SetFromInitial();
+    }
+
+    private async Task ProcessForm()
+    {
+        ValidateFormInput();
+        if (_formInputValid)
+        {
+            var activityRequest = new ActivityRequest(AccessibilityMinValue, AccessibilityMaxValue, TypeValue, ParticipantsValue, PriceMinValue, PriceMaxValue);
+            var activityResponse = await BoredDao.GetFilteredActivityAsync(activityRequest);
+            if (activityResponse != null)
+            {
+                _activities.Add(activityResponse);
+                Snackbar.Add("New Activity Added", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("No Items Returned With Supplied Parameters", Severity.Info);
+            }
+        }
+    }
+
+    private void ValidateFormInput()
+    {
+        _formInputValid = true;
+        if (PriceMinValue >= PriceMaxValue)
+        {
+            _formInputValid = false;
+            Snackbar.Add("Budget Min must be less than Budget Max", Severity.Error);
+        }
+        if (AccessibilityMinValue >= AccessibilityMaxValue)
+        {
+            _formInputValid = false;
+            Snackbar.Add("Accessibility Min must be less than Accessibility Max", Severity.Error);
+        }
+    }
+
+}

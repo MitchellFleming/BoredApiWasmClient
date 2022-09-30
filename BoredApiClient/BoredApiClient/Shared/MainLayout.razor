@@ -1,0 +1,26 @@
+﻿<MudAppBar Elevation="0">
+    <MudTooltip Text="Toggle Drawer">
+        <MudIconButton Icon="@Icons.Rounded.Notes" Color="Color.Inherit" Edge="Edge.Start"
+                       OnClick="@((e) => DrawerToggle())"/>
+    </MudTooltip>
+    <MudSpacer/>
+    <MudMenu AnchorOrigin="Origin.BottomRight" LockScroll="true" TransformOrigin="Origin.TopRight">
+        <ChildContent>
+        </ChildContent>
+    </MudMenu>
+</MudAppBar>
+
+<MudDrawer @bind-Open="_drawerOpen" Elevation="25" ClipMode="DrawerClipMode.Never">
+    <NavMenu/>
+</MudDrawer>
+
+<MudMainContent>
+    <MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
+        @ChildContent
+        <MudScrollToTop TopOffset="400" Style="z-index:2000;">
+            <MudFab Icon="@Icons.Material.Filled.KeyboardArrowUp" Color="Color.Primary"/>
+        </MudScrollToTop>
+    </MudContainer>
+</MudMainContent>
+
+<MudSnackbarProvider />
