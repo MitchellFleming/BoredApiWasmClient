@@ -1,0 +1,15 @@
+﻿@inherits LayoutComponentBase
+
+<MudRTLProvider RightToLeft="@_rightToLeft">
+    <MudThemeProvider Theme="_currentTheme"/>
+    <MudDialogProvider/>
+    <MudSnackbarProvider/>
+<MudLayout>
+    <ThemeDrawer @bind-ThemeDrawerOpen="_themeDrawerOpen" ThemeSetting="_clientSetting"
+                 ThemeSettingChanged="ThemeSettingChanged"/>
+    <ThemeButton OnClick="@(() => _themeDrawerOpen = true)"/>
+    <MainLayout>
+        @Body
+    </MainLayout>
+</MudLayout>
+</MudRTLProvider>
