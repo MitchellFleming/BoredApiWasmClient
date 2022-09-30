@@ -2,37 +2,40 @@
 using System.Text.Json.Serialization;
 using BoredApiClient.Enums;
 using BoredApiClient.Models;
+using Flurl.Http;
+using Flurl.Http.Configuration;
 
 namespace BoredApiClient.DataAccess;
 
 public class BoredDao
 {
-    private readonly HttpClient _httpClient;
-    private readonly JsonSerializerOptions _jsonSerializerOptions;
+    private readonly IFlurlClient _flurlClient;
 
-    public BoredDao()
+    public BoredDao(IFlurlClientFactory flurlClientFactory)
     {
-        _httpClient = new HttpClient
-        {
-            BaseAddress = new Uri("https://www.boredapi.com/api/activity"),
-        };
-        _jsonSerializerOptions = new JsonSerializerOptions
-        {
-            Converters =
-            {
-                new JsonStringEnumConverter()
-            }
-        };
+        _flurlClient = flurlClientFactory.Get("https://www.boredapi.com/api/activity");
     }
 
     public async Task<ActivityItem> GetRandomActivityAsync(string requestUri = "")
     {
         try
         {
-            var response = await _httpClient.GetAsync(requestUri);
-            var jsonString = await response.Content.ReadAsStringAsync();
-            var returnActivity = JsonSerializer.Deserialize<ActivityItem>(jsonString, _jsonSerializerOptions);
-            return returnActivity;
+            var response = await _flurlClient.Request().SendAsync(HttpMethod.Get);
+            return await response.GetJsonAsync<ActivityItem>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
+    }
+    
+    public async Task<ActivityItem> GetRandomActivityAsync(ActivityRequest request)
+    {
+        try
+        {
+            var response = await _flurlClient.Request().SetQueryParams(request.ToDictionary()).SendAsync(HttpMethod.Get);
+            return await response.GetJsonAsync<ActivityItem>();
         }
         catch (Exception ex)
         {
@@ -43,25 +46,7 @@ public class BoredDao
 
     public async Task<ActivityItem?> GetFilteredActivityAsync(ActivityRequest request)
     {
-        var queryString = BuildQueryString(request);
-        var response = await GetRandomActivityAsync(queryString);
+        var response = await GetRandomActivityAsync(request);
         return !string.IsNullOrWhiteSpace(response.Activity) ? response : null;
-    }
-
-    private static string BuildQueryString(ActivityRequest request)
-    {
-        // This works for a sample builder, but in a production scenario where the string could change more dynamically a collection of values concatenated with the & as the joining char would be more suitable
-        var queryString = "?";
-        if (request.Type != ActivityType.Any)
-        {
-            queryString += $"&type={request.Type}";
-        }
-
-        queryString += $"&minAccessibility={request.AccessibilityMin}";
-        queryString += $"&maxAccessibility={request.AccessibilityMax}";
-        queryString += $"&participants={request.Participants}";
-        queryString += $"&minPrice={request.PriceMin}";
-        queryString += $"&maxPrice={request.PriceMax}";
-        return queryString.ToLower();
     }
 }

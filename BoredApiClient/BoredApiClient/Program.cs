@@ -7,6 +7,7 @@ using BoredApiClient.DataAccess;
 using BoredApiClient.Settings;
 using MudBlazor;
 using MudBlazor.Services;
+using Flurl.Http.Configuration;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -14,6 +15,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services
     .AddBlazoredLocalStorage()
+    .AddSingleton<IFlurlClientFactory, PerBaseUrlFlurlClientFactory>()
     .AddScoped<BoredDao>()
     .AddMudServices(configuration =>
     {
