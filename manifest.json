@@ -1,7 +1,7 @@
 {
   "name": "BoredApiWasmClient",
   "short_name": "BoredApiWasmClient",
-  "start_url": "./",
+  "start_url": "./BoredApiWasmClient/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#3eaf7c",
