@@ -1,6 +1,6 @@
 {
-  "name": "Bored API Blazor WebAssembly Client",
-  "short_name": "Bored API WASM Client",
+  "name": "BoredApiWasmClient",
+  "short_name": "BoredApiWasmClient",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
