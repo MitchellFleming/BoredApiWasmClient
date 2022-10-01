@@ -21,7 +21,7 @@
       "url": "index.html"
     },
     {
-      "hash": "sha256-ys1pzCRR/metNYH4Y7b3iXAAsWrBICpg325SW4KFx/k=",
+      "hash": "sha256-eSpnaVwTMXXpjMrtkVA9hd4SIWSvJ1b3Yo6aNFmy7k0=",
       "url": "manifest.json"
     },
     {
